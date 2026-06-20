@@ -111,7 +111,7 @@ class ShapeDetectorService:
                 cleaned = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
                 
                 # Pipeline Step D: Find contours
-                contours, _ = cv2.findContours(cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                contours, _ = cv2.findContours(cleaned, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
                 logger.info(f"Found {len(contours)} initial contours on page {page.page_number}")
                 
                 for contour in contours:
@@ -119,7 +119,7 @@ class ShapeDetectorService:
                     area = cv2.contourArea(contour)
                     if settings.MIN_CONTOUR_AREA <= area <= settings.MAX_CONTOUR_AREA:
                         shapes_detected_count += 1
-                        logger.info(f"Detected contour with area: {area:.1f}")
+                        logger.debug(f"Detected contour with area: {area:.1f}")
                         
                         # Pipeline Step F: Bounding Box
                         x, y, w, h = cv2.boundingRect(contour)

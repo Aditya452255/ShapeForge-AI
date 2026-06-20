@@ -353,7 +353,7 @@ export const DocumentDetail: React.FC = () => {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {pagesData.map((page) => (
-              <div key={page.id} className="border border-gray-150 rounded-xl overflow-hidden bg-slate-50 flex flex-col group">
+              <div key={page.page_number} className="border border-gray-150 rounded-xl overflow-hidden bg-slate-50 flex flex-col group">
                 <div className="aspect-[4/3] flex items-center justify-center p-3">
                   <img
                     src={`${API_BASE_URL}/${page.image_path}`}
