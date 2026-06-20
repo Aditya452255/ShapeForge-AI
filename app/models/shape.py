@@ -1,26 +1,30 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, ForeignKey, DateTime
+from sqlalchemy import Column, String, Integer, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from app.database.session import Base
 
 def generate_uuid() -> str:
     return str(uuid.uuid4())
 
-class Page(Base):
-    __tablename__ = "pages"
+class Shape(Base):
+    __tablename__ = "shapes"
 
     id = Column(String(36), primary_key=True, default=generate_uuid, index=True)
-    document_id = Column(
+    page_id = Column(
         String(36),
-        ForeignKey("documents.id", ondelete="CASCADE"),
+        ForeignKey("pages.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
-    page_number = Column(Integer, nullable=False)
+    shape_number = Column(Integer, nullable=False)
     image_path = Column(String(500), nullable=False)
+    x = Column(Integer, nullable=False)
+    y = Column(Integer, nullable=False)
     width = Column(Integer, nullable=False)
     height = Column(Integer, nullable=False)
+    shape_type = Column(String(50), nullable=False)
+    confidence = Column(Float, nullable=False)
     created_at = Column(
         DateTime,
         nullable=False,
@@ -28,5 +32,4 @@ class Page(Base):
     )
 
     # Relationships
-    document = relationship("Document", back_populates="pages")
-    shapes = relationship("Shape", back_populates="page", cascade="all, delete-orphan")
+    page = relationship("Page", back_populates="shapes")

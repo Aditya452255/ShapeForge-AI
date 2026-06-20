@@ -5,8 +5,10 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.schemas.document import DocumentResponse, UploadResponse
 from app.schemas.page import PageListResponse, ProcessPDFResponse
+from app.schemas.shape import ShapeListResponse, ShapeResponse, ShapeDetectionResponse
 from app.services.document_service import DocumentService
 from app.services.pdf_processor import PDFProcessorService
+from app.services.shape_detector import ShapeDetectorService
 
 router = APIRouter()
 
@@ -67,3 +69,47 @@ def get_document_pages(
     db: Session = Depends(get_db)
 ):
     return PDFProcessorService.get_document_pages(db=db, document_id=document_id)
+
+@router.post(
+    "/documents/{document_id}/detect-shapes",
+    response_model=ShapeDetectionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Detect and classify shapes on all pages of a document",
+    description="Loads page images, extracts contours, crops shapes, executes geometry-based classification, and stores shape metadata."
+)
+def detect_document_shapes(
+    document_id: str,
+    db: Session = Depends(get_db)
+):
+    shapes_count = ShapeDetectorService.detect_shapes(db=db, document_id=document_id)
+    return ShapeDetectionResponse(
+        document_id=document_id,
+        shapes_detected=shapes_count,
+        status="success"
+    )
+
+@router.get(
+    "/documents/{document_id}/shapes",
+    response_model=List[ShapeListResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List all detected shapes for a document",
+    description="Returns a list of metadata for all shapes detected across the pages of a document."
+)
+def get_document_shapes(
+    document_id: str,
+    db: Session = Depends(get_db)
+):
+    return ShapeDetectorService.get_document_shapes(db=db, document_id=document_id)
+
+@router.get(
+    "/shapes/{shape_id}",
+    response_model=ShapeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get detailed metadata for a shape",
+    description="Retrieves complete metadata for a specific shape including its bounding box coordinates."
+)
+def get_shape_details(
+    shape_id: str,
+    db: Session = Depends(get_db)
+):
+    return ShapeDetectorService.get_shape_by_id(db=db, shape_id=shape_id)

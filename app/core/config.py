@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./pdf2editable.db"
     UPLOAD_DIR: str = "uploads"
     PAGES_DIR: str = "pages"
+    SHAPES_DIR: str = "shapes"
+    MIN_CONTOUR_AREA: int = 500
+    MAX_CONTOUR_AREA: int = 500000
     LOG_LEVEL: str = "INFO"
 
     @property
@@ -24,5 +27,10 @@ class Settings(BaseSettings):
     def pages_path(self) -> Path:
         # Resolve path relative to the project root
         return Path(self.PAGES_DIR).resolve()
+
+    @property
+    def shapes_path(self) -> Path:
+        # Resolve path relative to the project root
+        return Path(self.SHAPES_DIR).resolve()
 
 settings = Settings()

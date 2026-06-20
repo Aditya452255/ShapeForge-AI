@@ -1,8 +1,12 @@
-# PDF2EditableSymbols - Phase 2 (PDF Processing Engine)
+# PDF2EditableSymbols - Phase 3 & 4 (Shape Detection & Classification)
 
 PDF2EditableSymbols is a production-grade backend system designed to accept PDF uploads of engineering diagrams, extract symbols/shapes from them, and convert them into editable objects with custom properties.
 
-This repository implements **Phase 2: PDF Processing Engine (PDF → High Resolution Images)**.
+This repository implements:
+- **Phase 3: Shape Detection Engine** (extracting symbols using OpenCV contours)
+- **Phase 4: Shape Classification Engine** (assigning categories via rule-based geometry heuristics)
+
+---
 
 ## Technology Stack
 
@@ -13,6 +17,8 @@ This repository implements **Phase 2: PDF Processing Engine (PDF → High Resolu
 - **ORM**: SQLAlchemy (for database operations)
 - **Database**: SQLite (local single-file database)
 - **PDF Renderer**: PyMuPDF (`fitz` for high-resolution PNG page extraction)
+- **Computer Vision**: OpenCV (`cv2`) & NumPy (for contour detection and image cropping)
+- **Image handling**: Pillow (`PIL`)
 - **File Upload Handler**: Python Multipart
 - **Testing**: pytest (for integration test automation)
 
@@ -25,27 +31,33 @@ project/
 ├── app/
 │   ├── api/
 │   │   ├── deps.py             # Dependency injection (e.g. database sessions)
-│   │   └── endpoints.py        # Router definitions (Upload, List, Process, Pages)
+│   │   └── endpoints.py        # Router definitions (Upload, List, Process, Pages, Detect, Shapes)
 │   ├── core/
 │   │   ├── config.py           # Pydantic v2 BaseSettings configuration
 │   │   └── logging.py          # Custom logging initialization
 │   ├── database/
 │   │   └── session.py          # SQLAlchemy setup (engine and sessionmaker)
 │   ├── models/
-│   │   ├── document.py         # Document model with pages relationship
-│   │   └── page.py             # Page model representing individual extracted pages
+│   │   ├── document.py         # Document model with cascading pages
+│   │   ├── page.py             # Page model with cascading shapes
+│   │   └── shape.py            # Shape model storing cropped dimensions and classes
 │   ├── schemas/
-│   │   ├── document.py         # Pydantic validation schemas for documents
-│   │   └── page.py             # Pydantic validation schemas for pages
+│   │   ├── document.py         # Pydantic schemas for documents
+│   │   ├── page.py             # Pydantic schemas for pages
+│   │   └── shape.py            # Pydantic schemas for shapes & bbox nested structures
 │   ├── services/
-│   │   ├── document_service.py # Core business logic (file saving & DB inserts)
-│   │   └── pdf_processor.py    # PyMuPDF processing pipeline (PDF to PNG conversions)
+│   │   ├── document_service.py # Business logic (file saving & DB inserts)
+│   │   ├── pdf_processor.py    # PyMuPDF processing pipeline (PDF to PNG conversions)
+│   │   ├── shape_detector.py   # OpenCV shape segmentation pipeline
+│   │   └── shape_classifier.py # Rule-based geometric shape classifier
 │   └── main.py                 # Startup hooks, lifespan, CORS, and error handling
 │
 ├── uploads/                    # Folder containing uploaded PDF documents
-├── pages/                      # Folder containing processed page images organized by document ID
+├── pages/                      # Folder containing processed page images
+├── shapes/                     # Folder containing cropped symbol PNG images
 ├── tests/
-│   └── test_pdf_processing.py  # Automated integration test suite
+│   ├── test_pdf_processing.py  # Automated integration test suite for PDF rendering
+│   └── test_shape_detection.py # Automated integration test suite for shape detection
 │
 ├── .env                        # Configuration file for environment variables
 ├── requirements.txt            # Project dependencies list
@@ -84,6 +96,9 @@ PROJECT_NAME="PDF2EditableSymbols"
 DATABASE_URL="sqlite:///./pdf2editable.db"
 UPLOAD_DIR="uploads"
 PAGES_DIR="pages"
+SHAPES_DIR="shapes"
+MIN_CONTOUR_AREA=500
+MAX_CONTOUR_AREA=500000
 LOG_LEVEL="INFO"
 ```
 
@@ -109,17 +124,19 @@ Once running, you can access:
 To run the automated integration tests:
 
 ```powershell
-.\venv\Scripts\pytest.exe tests/test_pdf_processing.py -v
+# Run all tests (processing & shape detection)
+.\venv\Scripts\pytest.exe -p no:logging -v
 ```
 
 This tests:
-1. Root health checks.
-2. File validation (extensions & MIME types).
-3. Image rendering at A4 scale zoomed 3x (300 DPI quality).
-4. Disk creation of PNG images.
-5. SQL metadata creation & relationship cascade deletes.
-6. Error handling for non-existent document IDs.
-7. Graceful rollback safety when processing corrupted PDF uploads.
+1. Root health checks & file uploads validation.
+2. High-resolution PNG extraction.
+3. Shape segmentation using computer vision.
+4. Bounding box coordinates calculation and crop saves.
+5. Shape classifier assignments based on aspect ratio, circularity, and geometry.
+6. Empty page handling (returns 0 shapes).
+7. Invalid document ID exception handling.
+8. DB transaction rollbacks on corrupted file errors.
 
 ---
 
@@ -143,41 +160,61 @@ This tests:
 ### 2. Get All Documents
 - **Endpoint**: `GET /documents`
 - **Response Code**: `200 OK`
-- **Response Body**:
-```json
-[
-  {
-    "id": "835c6020-f561-4876-b605-728b12204c3d",
-    "filename": "diagram.pdf",
-    "file_path": "uploads/835c6020-f561-4876-b605-728b12204c3d.pdf",
-    "upload_timestamp": "2026-06-20T16:24:32.482811Z"
-  }
-]
-```
 
-### 3. Process PDF Document
+### 3. Process PDF Document (PDF → Pages)
 - **Endpoint**: `POST /documents/{document_id}/process`
+- **Response Code**: `200 OK`
+
+### 4. Retrieve Extracted Pages
+- **Endpoint**: `GET /documents/{document_id}/pages`
+- **Response Code**: `200 OK`
+
+### 5. Detect and Classify Shapes (Pages → Shapes)
+- **Endpoint**: `POST /documents/{document_id}/detect-shapes`
 - **Response Code**: `200 OK`
 - **Response Body**:
 ```json
 {
   "document_id": "835c6020-f561-4876-b605-728b12204c3d",
-  "pages_processed": 3,
+  "shapes_detected": 16,
   "status": "success"
 }
 ```
 
-### 4. Retrieve Extracted Pages
-- **Endpoint**: `GET /documents/{document_id}/pages`
+### 6. List Detected Shapes
+- **Endpoint**: `GET /documents/{document_id}/shapes`
 - **Response Code**: `200 OK`
 - **Response Body**:
 ```json
 [
   {
-    "page_number": 1,
-    "image_path": "pages/835c6020-f561-4876-b605-728b12204c3d/page_1.png",
-    "width": 2480,
-    "height": 3508
+    "shape_id": "876c6020-f561-4876-b605-728b12204c3d",
+    "shape_number": 1,
+    "shape_type": "valve",
+    "confidence": 0.80,
+    "image_path": "shapes/835c6020-f561-4876-b605-728b12204c3d/shape_1.png"
   }
 ]
+```
+
+### 7. Get Shape Details
+- **Endpoint**: `GET /shapes/{shape_id}`
+- **Response Code**: `200 OK`
+- **Response Body**:
+```json
+{
+  "shape_id": "876c6020-f561-4876-b605-728b12204c3d",
+  "page_id": "835c6020-f561-4876-b605-728b12204c3d",
+  "shape_number": 1,
+  "image_path": "shapes/835c6020-f561-4876-b605-728b12204c3d/shape_1.png",
+  "bbox": {
+    "x": 120,
+    "y": 220,
+    "width": 150,
+    "height": 300
+  },
+  "shape_type": "valve",
+  "confidence": 0.80,
+  "created_at": "2026-06-20T16:38:02.482811Z"
+}
 ```

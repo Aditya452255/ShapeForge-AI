@@ -10,6 +10,7 @@ from app.database.session import engine, Base
 from app.api.endpoints import router as api_router
 from app.models.document import Document
 from app.models.page import Page
+from app.models.shape import Shape
 
 # Setup logging before running the application
 setup_logging()
@@ -17,12 +18,15 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure uploads and pages folders exist on application start
+    # Ensure uploads, pages, and shapes folders exist on application start
     settings.upload_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Ensured upload directory exists at: {settings.upload_path}")
     
     settings.pages_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Ensured pages directory exists at: {settings.pages_path}")
+    
+    settings.shapes_path.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Ensured shapes directory exists at: {settings.shapes_path}")
     
     # Initialize SQLite database tables
     logger.info("Initializing database tables...")
