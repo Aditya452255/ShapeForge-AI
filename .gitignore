@@ -1,0 +1,29 @@
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Environment files
+.env
+
+# Databases
+*.db
+pdf2editable.db
+
+# Python caches and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editor settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
