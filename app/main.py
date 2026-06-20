@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.logging import setup_logging
@@ -61,6 +62,17 @@ app.add_middleware(
 
 # Include the endpoints router
 app.include_router(api_router)
+
+# Serve static files for pages, shapes, and svgs
+# Starlette's StaticFiles requires directories to exist at mount time, so we pre-create them here.
+settings.pages_path.mkdir(parents=True, exist_ok=True)
+settings.shapes_path.mkdir(parents=True, exist_ok=True)
+settings.svgs_path.mkdir(parents=True, exist_ok=True)
+
+app.mount("/pages", StaticFiles(directory=str(settings.pages_path)), name="pages")
+app.mount("/shapes", StaticFiles(directory=str(settings.shapes_path)), name="shapes")
+app.mount("/svgs", StaticFiles(directory=str(settings.svgs_path)), name="svgs")
+
 
 # Global Exception Handler to catch any unhandled exceptions and log them correctly
 @app.exception_handler(Exception)

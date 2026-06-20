@@ -123,6 +123,47 @@ def get_shape_details(
 ):
     return ShapeDetectorService.get_shape_by_id(db=db, shape_id=shape_id)
 
+@router.get(
+    "/documents/{document_id}/export",
+    summary="Export all shape metadata as JSON file",
+    description="Retrieves all shapes detected in the document and returns them as a JSON file download."
+)
+def export_document_metadata(
+    document_id: str,
+    db: Session = Depends(get_db)
+):
+    from fastapi.responses import JSONResponse
+    
+    # Retrieve all shapes for this document (will raise 404 if document doesn't exist)
+    shapes = ShapeDetectorService.get_document_shapes(db=db, document_id=document_id)
+    
+    # Map to full metadata response format
+    export_data = []
+    for shape in shapes:
+        export_data.append({
+            "shape_id": str(shape.id),
+            "page_id": str(shape.page_id),
+            "shape_number": shape.shape_number,
+            "image_path": shape.image_path,
+            "svg_path": shape.svg_path,
+            "shape_type": shape.shape_type,
+            "confidence": float(shape.confidence),
+            "properties": shape.properties or {},
+            "bbox": {
+                "x": shape.x,
+                "y": shape.y,
+                "width": shape.width,
+                "height": shape.height
+            },
+            "created_at": shape.created_at.isoformat() if shape.created_at else None
+        })
+        
+    headers = {
+        "Content-Disposition": f'attachment; filename="document_{document_id}_metadata.json"'
+    }
+    return JSONResponse(content=export_data, headers=headers)
+
+
 @router.post(
     "/documents/{document_id}/generate-svg",
     response_model=SVGGenerationResponse,

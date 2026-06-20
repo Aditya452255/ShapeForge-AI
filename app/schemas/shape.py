@@ -13,6 +13,7 @@ class ShapeResponse(BaseModel):
 
     shape_id: UUID = Field(validation_alias="id", serialization_alias="shape_id")
     page_id: UUID
+    document_id: UUID | None = None
     shape_number: int
     image_path: str
     bbox: BoundingBox
@@ -31,6 +32,7 @@ class ShapeResponse(BaseModel):
             attribs = {
                 "id": data.id,
                 "page_id": data.page_id,
+                "document_id": data.page.document_id if data.page else None,
                 "shape_number": data.shape_number,
                 "image_path": data.image_path,
                 "shape_type": data.shape_type,
@@ -71,6 +73,8 @@ class ShapeListResponse(BaseModel):
     shape_type: str
     confidence: float
     image_path: str
+    svg_path: str | None = None
+
 
 class ShapeDetectionResponse(BaseModel):
     document_id: UUID
