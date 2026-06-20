@@ -19,7 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({ title }) => {
         } else {
           setBackendHealthy(false);
         }
-      } catch (err) {
+      } catch {
         setBackendHealthy(false);
       }
     };

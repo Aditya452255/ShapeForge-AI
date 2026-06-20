@@ -116,6 +116,7 @@ export const ShapeDetail: React.FC = () => {
             {/* Tab Contents */}
             {activeTab === 'vector' ? (
               <SVGViewer
+                key={shape.svg_path || 'no-svg'}
                 svgPath={shape.svg_path}
                 shapeName={`Symbol #${shape.shape_number}`}
               />

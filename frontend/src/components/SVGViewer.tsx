@@ -18,12 +18,14 @@ export const SVGViewer: React.FC<SVGViewerProps> = ({ svgPath, shapeName }) => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const resetViewer = () => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
   // Fetch the SVG string to render it directly inline. This allows smooth color rendering and inspectability.
   useEffect(() => {
-    if (!svgPath) {
-      setSvgContent(null);
-      return;
-    }
+    if (!svgPath) return;
 
     const fetchSvg = async () => {
       setLoading(true);
@@ -45,7 +47,6 @@ export const SVGViewer: React.FC<SVGViewerProps> = ({ svgPath, shapeName }) => {
     };
 
     fetchSvg();
-    resetViewer();
   }, [svgPath]);
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -76,10 +77,7 @@ export const SVGViewer: React.FC<SVGViewerProps> = ({ svgPath, shapeName }) => {
   const zoomIn = () => setScale((prev) => Math.min(8, prev + 0.25));
   const zoomOut = () => setScale((prev) => Math.max(0.3, prev - 0.25));
   
-  const resetViewer = () => {
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
-  };
+
 
   const toggleFullWidth = () => {
     setIsFullWidth((prev) => !prev);

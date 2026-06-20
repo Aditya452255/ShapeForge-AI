@@ -38,8 +38,8 @@ export const UploadCard: React.FC<UploadCardProps> = ({ onUploadSuccess }) => {
       const response = await uploadPDF(file);
       setSuccessMsg(`"${file.name}" uploaded successfully!`);
       onUploadSuccess(response);
-    } catch (err: any) {
-      const details = err.response?.data?.detail || 'Failed to connect to the server.';
+    } catch (err) {
+      const details = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Failed to connect to the server.';
       setError(typeof details === 'string' ? details : 'An error occurred during file upload.');
     } finally {
       setUploading(false);

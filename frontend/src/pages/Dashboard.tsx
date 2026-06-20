@@ -22,7 +22,7 @@ export const Dashboard: React.FC = () => {
             const shapes = await getDocumentShapes(doc.id);
             totalShapesCount += shapes.length;
             totalSvgsCount += shapes.filter((s) => s.svg_path !== null).length;
-          } catch (err) {
+          } catch {
             // Document might not have shapes detected yet, which is fine (returns empty list or error status)
             console.warn(`Could not load shapes for document ${doc.id}`);
           }

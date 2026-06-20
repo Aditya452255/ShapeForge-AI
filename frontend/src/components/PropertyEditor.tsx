@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Trash2, Save, Check, RotateCcw } from 'lucide-react';
 import { putShapeProperties } from '../api/shapes';
 import type { Shape } from '../types';
@@ -15,24 +15,31 @@ interface PropertyRow {
 }
 
 export const PropertyEditor: React.FC<PropertyEditorProps> = ({ shape, onUpdate }) => {
-  const [rows, setRows] = useState<PropertyRow[]>([]);
+  const [prevProperties, setPrevProperties] = useState(shape.properties);
+  const [rows, setRows] = useState<PropertyRow[]>(() =>
+    Object.entries(shape.properties || {}).map(([key, value], idx) => ({
+      id: `row-${idx}-${key}`,
+      key,
+      value,
+    }))
+  );
   const [saving, setSaving] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize properties from shape
-  useEffect(() => {
-    const initialRows: PropertyRow[] = Object.entries(shape.properties || {}).map(
-      ([key, value], idx) => ({
-        id: `row-${idx}-${Date.now()}`,
+  // Adjust state during render when props change
+  if (shape.properties !== prevProperties) {
+    setPrevProperties(shape.properties);
+    setRows(
+      Object.entries(shape.properties || {}).map(([key, value], idx) => ({
+        id: `row-${idx}-${key}`,
         key,
         value,
-      })
+      }))
     );
-    setRows(initialRows);
     setSaved(false);
     setError(null);
-  }, [shape]);
+  }
 
   const handleAddRow = () => {
     setRows((prev) => [
@@ -107,8 +114,8 @@ export const PropertyEditor: React.FC<PropertyEditorProps> = ({ shape, onUpdate 
       const updatedShape = await putShapeProperties(shape.shape_id, propertiesToSend);
       onUpdate(updatedShape);
       setSaved(true);
-    } catch (err: any) {
-      const details = err.response?.data?.detail || 'Failed to save properties.';
+    } catch (err) {
+      const details = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Failed to save properties.';
       setError(typeof details === 'string' ? details : 'An error occurred while saving.');
     } finally {
       setSaving(false);

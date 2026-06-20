@@ -64,10 +64,10 @@ export const DocumentDetail: React.FC = () => {
         message: `Successfully processed ${resp.pages_processed} pages from PDF diagram.`,
       });
       await refetchPages();
-    } catch (err: any) {
+    } catch (err) {
       setNotify({
         type: 'error',
-        message: err.response?.data?.detail || 'Page extraction failed.',
+        message: (err as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Page extraction failed.',
       });
     } finally {
       setProcessingPages(false);
@@ -84,10 +84,10 @@ export const DocumentDetail: React.FC = () => {
         message: `Shape detection completed! Found ${resp.shapes_detected} symbols.`,
       });
       await refetchShapes();
-    } catch (err: any) {
+    } catch (err) {
       setNotify({
         type: 'error',
-        message: err.response?.data?.detail || 'Shape detection pipeline failed.',
+        message: (err as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Shape detection pipeline failed.',
       });
     } finally {
       setDetectingShapes(false);
@@ -104,10 +104,10 @@ export const DocumentDetail: React.FC = () => {
         message: `Vector tracing completed! Generated ${resp.svg_generated} editable SVGs.`,
       });
       await refetchShapes();
-    } catch (err: any) {
+    } catch (err) {
       setNotify({
         type: 'error',
-        message: err.response?.data?.detail || 'SVG vector tracing failed.',
+        message: (err as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'SVG vector tracing failed.',
       });
     } finally {
       setGeneratingSVGs(false);
