@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime
+from sqlalchemy.orm import relationship
 from app.database.session import Base
 
 def generate_uuid() -> str:
@@ -13,3 +14,6 @@ class Document(Base):
     filename = Column(String(255), nullable=False)
     file_path = Column(String(500), nullable=False)
     upload_timestamp = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    pages = relationship("Page", back_populates="document", cascade="all, delete-orphan")

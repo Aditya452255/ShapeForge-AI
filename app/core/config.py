@@ -12,11 +12,17 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "PDF2EditableSymbols"
     DATABASE_URL: str = "sqlite:///./pdf2editable.db"
     UPLOAD_DIR: str = "uploads"
+    PAGES_DIR: str = "pages"
     LOG_LEVEL: str = "INFO"
 
     @property
     def upload_path(self) -> Path:
         # Resolve path relative to the project root
         return Path(self.UPLOAD_DIR).resolve()
+
+    @property
+    def pages_path(self) -> Path:
+        # Resolve path relative to the project root
+        return Path(self.PAGES_DIR).resolve()
 
 settings = Settings()
