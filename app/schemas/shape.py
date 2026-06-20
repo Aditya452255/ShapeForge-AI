@@ -18,6 +18,8 @@ class ShapeResponse(BaseModel):
     bbox: BoundingBox
     shape_type: str
     confidence: float
+    svg_path: str | None = None
+    properties: dict = Field(default_factory=dict)
     created_at: datetime
 
     @model_validator(mode="before")
@@ -33,6 +35,8 @@ class ShapeResponse(BaseModel):
                 "image_path": data.image_path,
                 "shape_type": data.shape_type,
                 "confidence": data.confidence,
+                "svg_path": data.svg_path,
+                "properties": data.properties or {},
                 "created_at": data.created_at,
                 "bbox": {
                     "x": data.x,
@@ -50,6 +54,9 @@ class ShapeResponse(BaseModel):
                 "width": data["width"],
                 "height": data["height"]
             }
+            # Ensure properties defaults to dict
+            if "properties" not in data or data["properties"] is None:
+                data["properties"] = {}
             # Also ensure shape_id matches id for alias mapping
             if "id" in data and "shape_id" not in data:
                 data["shape_id"] = data["id"]
@@ -69,3 +76,7 @@ class ShapeDetectionResponse(BaseModel):
     document_id: UUID
     shapes_detected: int
     status: str
+
+class ShapePropertyUpdate(BaseModel):
+    model_config = ConfigDict(extra="allow")
+

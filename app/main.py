@@ -28,6 +28,9 @@ async def lifespan(app: FastAPI):
     settings.shapes_path.mkdir(parents=True, exist_ok=True)
     logger.info(f"Ensured shapes directory exists at: {settings.shapes_path}")
     
+    settings.svgs_path.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Ensured svgs directory exists at: {settings.svgs_path}")
+    
     # Initialize SQLite database tables
     logger.info("Initializing database tables...")
     try:

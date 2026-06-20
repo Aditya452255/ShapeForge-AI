@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, Float, ForeignKey, DateTime
+from sqlalchemy import Column, String, Integer, Float, ForeignKey, DateTime, JSON
 from sqlalchemy.orm import relationship
 from app.database.session import Base
 
@@ -25,6 +25,8 @@ class Shape(Base):
     height = Column(Integer, nullable=False)
     shape_type = Column(String(50), nullable=False)
     confidence = Column(Float, nullable=False)
+    svg_path = Column(String(500), nullable=True)
+    properties = Column(JSON, nullable=True)
     created_at = Column(
         DateTime,
         nullable=False,

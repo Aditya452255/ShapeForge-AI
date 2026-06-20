@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads"
     PAGES_DIR: str = "pages"
     SHAPES_DIR: str = "shapes"
+    SVG_DIR: str = "svgs"
     MIN_CONTOUR_AREA: int = 500
     MAX_CONTOUR_AREA: int = 500000
     LOG_LEVEL: str = "INFO"
@@ -32,5 +33,10 @@ class Settings(BaseSettings):
     def shapes_path(self) -> Path:
         # Resolve path relative to the project root
         return Path(self.SHAPES_DIR).resolve()
+
+    @property
+    def svgs_path(self) -> Path:
+        # Resolve path relative to the project root
+        return Path(self.SVG_DIR).resolve()
 
 settings = Settings()
